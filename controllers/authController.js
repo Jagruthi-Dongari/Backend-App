@@ -5,19 +5,33 @@ const login = async (req, res) => {
   res.render("auth/login");
 };
 const validateUser = async (req, res) => {
+
   const { email, password } = req.body;
-  const user = await userModel.findOne({ email, role: "admin" });
+
+  const user = await userModel.findOne({ email });
+
   if (user) {
+
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (isMatch) {
+
       req.session.user = user;
+
       res.redirect("/");
+
     } else {
+
       res.redirect("/auth/login");
+
     }
+
   } else {
+
     res.redirect("/auth/login");
+
   }
+
 };
 const register = async (req, res) => {
   res.render("auth/register");
@@ -34,9 +48,28 @@ const registerUser = async (req, res) => {
 const signup = async (req, res) => {
   const { name, email, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
-  password = hashedPassword;
-  await userModel.create({ name, email, password: hashedPassword });
-  res.json({ message: "User Created" });
+  // password = hashedPassword;
+  const response = await userModel.create({
+    name,
+    email,
+    password: hashedPassword,
+  });
+  res.json(response);
+};
+
+const signin = async (req, res) => {
+  const { email, password } = req.body;
+  const user = await userModel.findOne({ email });
+  if (user) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (isMatch) {
+      res.json(user);
+    } else {
+      res.json({ error: "Invalid Password" });
+    }
+  } else {
+    res.json({ error: "Invalid User" });
+  }
 };
 
 const logout = (req, res) => {
@@ -45,4 +78,4 @@ const logout = (req, res) => {
   res.render("auth/login");
 };
 
-export { login, validateUser, register, registerUser, logout };
+export { login, validateUser, register, registerUser, logout, signup,signin };
